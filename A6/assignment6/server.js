@@ -325,9 +325,49 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
-app.post("/register", (req, res) => {});
+app.post("/register", (req, res) => {
+  authData
+    .registerUser(req.body)
+    .then((user) => {
+      res.render("register", { successMessage: "User created" });
+    })
+    .catch((err) => {
+      res.render("register", {
+        errorMessage: err,
+        userName: req.body.userName,
+      });
+    });
+});
 
-// ? LOGIN & REGISTER Routes
+app.post("/login", (req, res) => {
+  req.body.userAgent = req.get("User-Agent");
+
+  authData
+    .checkUser(req.body)
+    .then((user) => {
+      req.session.user = {
+        userName: user.userName,
+        email: user.email,
+        loginHistory: user.loginHistory,
+      };
+
+      res.redirect("/posts");
+    })
+    .catch((err) => {
+      res.render("login", { errorMessage: err, userName: req.body.userName });
+    });
+});
+
+app.get("/logout", (req, res) => {
+  req.session.reset(); //* or req.session.destroy()
+  res.redirect("/");
+});
+
+app.get("/userHistory", ensureLogin, (req, res) => {
+  res.render("userHistory");
+});
+
+// ? LOGIN, REGISTER, LOGOUT and USERHISTORY Routes
 
 // ! Keep the param routes(eg. /posts/:value) at the end to avoid conflicts with other routes
 app.get("/posts/:value", ensureLogin, (req, res) => {
