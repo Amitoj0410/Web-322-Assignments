@@ -38,15 +38,44 @@
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav">
             <li><a href="/blog">Blog</a></li>
-            {{! <li class="active"><a href="/about">About</a></li> }}
             {{#navLink "/about"}}About{{/navLink}}
           </ul>
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="/posts">Posts</a></li>
-            <li><a href="/categories">Categories</a></li>
-            {{! <li><a href="/posts/add">Add Post</a></li> }}
-            {{!-- {{#navLink "/posts/add"}}Add Post{{/navLink}} --}}
-          </ul>
+
+          {{#if session.user}}
+            <form class="navbar-form navbar-right">
+              <div class="dropdown">
+                <button
+                  class="btn btn-primary dropdown-toggle"
+                  type="button"
+                  id="userMenu"
+                  data-toggle="dropdown"
+                >
+                  <span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;
+                  {{session.user.userName}}&nbsp;&nbsp;<span
+                    class="caret"
+                  ></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="userMenu">
+                  <li><a href="/userHistory">User History</a></li>
+                  <li><a href="/logout">Log Out</a></li>
+                </ul>
+              </div>
+            </form>
+            <ul class="nav navbar-nav navbar-right">
+              {{#navLink "/posts"}}Posts{{/navLink}}
+              {{#navLink "/categories"}}Categories{{/navLink}}
+            </ul>
+          {{else}}
+            <form class="navbar-form navbar-right">
+              <a href="/register" class="btn btn-success"><span
+                  class="glyphicon glyphicon-cog"
+                ></span>&nbsp;&nbsp;Register</a>
+              <a href="/login" class="btn btn-primary"><span
+                  class="glyphicon glyphicon-chevron-right"
+                ></span>&nbsp;&nbsp;Log In</a>
+            </form>
+          {{/if}}
+
         </div>
         <!-- /.navbar-collapse -->
       </div>

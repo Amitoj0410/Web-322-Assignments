@@ -95,7 +95,8 @@ app.use(function (req, res, next) {
 });
 
 function ensureLogin(req, res, next) {
-  if (!req.session.userName) {
+  console.log(req.session);
+  if (!req?.session?.user?.userName) {
     res.redirect("/login");
   } else {
     next();
@@ -326,16 +327,20 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  // req.body.userAgent = req.get("User-Agent");
   authData
     .registerUser(req.body)
     .then((user) => {
+      console.log("User created: " + user);
       res.render("register", { successMessage: "User created" });
+      // res.json({ user: user });
     })
     .catch((err) => {
       res.render("register", {
         errorMessage: err,
         userName: req.body.userName,
       });
+      // res.json({ err: err });
     });
 });
 
@@ -351,10 +356,15 @@ app.post("/login", (req, res) => {
         loginHistory: user.loginHistory,
       };
 
+      // res.json(user);
       res.redirect("/posts");
     })
     .catch((err) => {
-      res.render("login", { errorMessage: err, userName: req.body.userName });
+      res.render("login", {
+        errorMessage: err,
+        emailOrUserName: req.body.emailOrUserName,
+      });
+      // res.json({ err: err });
     });
 });
 

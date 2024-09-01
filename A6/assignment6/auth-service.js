@@ -30,15 +30,9 @@ function initialize() {
 function registerUser(userData) {
   //todo add bcrypt to hash password
   return new Promise((resolve, reject) => {
-    const {
-      email,
-      password,
-      password2,
-      userName,
-      userAgent,
-      firstName,
-      lastName,
-    } = userData;
+    console.log(userData);
+    const { email, password, password2, userName, firstName, lastName } =
+      userData;
 
     User.findOne({
       $or: [{ email: email }, { userName: userName }],
@@ -57,7 +51,6 @@ function registerUser(userData) {
               email,
               password,
               userName,
-              userAgent,
               firstName,
               lastName,
             });
@@ -83,7 +76,7 @@ function checkUser(userData) {
   return new Promise((resolve, reject) => {
     const { emailOrUserName, password, userAgent } = userData;
     User.findOne({
-      $or: [{ email: emailOrUserName, userName: emailOrUserName }],
+      $or: [{ email: emailOrUserName }, { userName: emailOrUserName }],
     })
       .exec()
       .then((user) => {
