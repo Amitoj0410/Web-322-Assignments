@@ -1,5 +1,6 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 let Schema = mongoose.Schema;
 
@@ -28,7 +29,6 @@ function initialize() {
 }
 
 function registerUser(userData) {
-  //todo add bcrypt to hash password
   return new Promise((resolve, reject) => {
     console.log(userData);
     const { email, password, password2, userName, firstName, lastName } =
@@ -47,21 +47,28 @@ function registerUser(userData) {
             reject("Password Doesnt Match");
           } else {
             //if password matches, proceed with user registraction
-            let newUser = new User({
-              email,
-              password,
-              userName,
-              firstName,
-              lastName,
-            });
+            bcrypt
+              .hash(password, 10)
+              .then((hash) => {
+                let newUser = new User({
+                  email,
+                  password: hash,
+                  userName,
+                  firstName,
+                  lastName,
+                });
 
-            newUser
-              .save()
-              .then((data) => {
-                resolve(data);
+                newUser
+                  .save()
+                  .then((data) => {
+                    resolve(data);
+                  })
+                  .catch((err) => {
+                    reject("Error saving user: " + err);
+                  });
               })
               .catch((err) => {
-                reject("Error saving user: " + err);
+                reject("Error hashing password: " + err);
               });
           }
         }
@@ -83,27 +90,27 @@ function checkUser(userData) {
         if (!user) {
           reject("User not found");
         } else {
-          //user exists, check password
-          if (user.password !== password) {
-            reject("Incorrect password entered");
-          } else {
-            //password matches
-            user.loginHistory.push({
-              dateTime: new Date().toString(),
-              userAgent: userAgent,
-            });
-            User.updateOne(
-              { userName: user.userName }, // Query criteria
-              { $set: { loginHistory: user.loginHistory } } // Update operation
-            )
-              .exec()
-              .then(() => {
-                resolve(user);
-              })
-              .catch((err) => {
-                reject("Error updating user login history: " + err);
+          bcrypt.compare(password, user.password).then((result) => {
+            if (result) {
+              user.loginHistory.push({
+                dateTime: new Date().toString(),
+                userAgent: userAgent,
               });
-          }
+              User.updateOne(
+                { userName: user.userName }, // Query criteria
+                { $set: { loginHistory: user.loginHistory } } // Update operation
+              )
+                .exec()
+                .then(() => {
+                  resolve(user);
+                })
+                .catch((err) => {
+                  reject("Error updating user login history: " + err);
+                });
+            } else {
+              reject("Incorrect password entered");
+            }
+          });
         }
       })
       .catch((err) => {

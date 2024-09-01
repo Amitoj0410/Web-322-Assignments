@@ -62,6 +62,15 @@ app.engine(
 app.set("view engine", "hbs");
 app.set("views", path.join(__dirname, "views"));
 
+app.use(
+  clientSessions({
+    cookieName: "session",
+    secret: "niBUXKblHlk0wzS0lpow",
+    duration: 30 * 60 * 1000, // 30 minutes
+    activeDuration: 15 * 60 * 1000, // 15 minutes
+  })
+);
+
 app.use(express.json()); // To parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
 
@@ -80,22 +89,13 @@ app.use(function (req, res, next) {
 });
 // ? Interesting middleware to understand
 
-app.use(
-  clientSessions({
-    cookieName: "session",
-    secret: "niBUXKblHlk0wzS0lpow",
-    duration: 2 * 60 * 1000, // 2 mins
-    activeDuration: 60 * 1000, // 1 min
-  })
-);
-
 app.use(function (req, res, next) {
   res.locals.session = req.session;
   next();
 });
 
 function ensureLogin(req, res, next) {
-  console.log(req.session);
+  // console.log(req.session);
   if (!req?.session?.user?.userName) {
     res.redirect("/login");
   } else {
@@ -332,13 +332,16 @@ app.post("/register", (req, res) => {
     .registerUser(req.body)
     .then((user) => {
       console.log("User created: " + user);
-      res.render("register", { successMessage: "User created" });
+      res.render("register", { successMessage: "User created successfully" });
       // res.json({ user: user });
     })
     .catch((err) => {
       res.render("register", {
         errorMessage: err,
         userName: req.body.userName,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email,
       });
       // res.json({ err: err });
     });
@@ -353,8 +356,9 @@ app.post("/login", (req, res) => {
       req.session.user = {
         userName: user.userName,
         email: user.email,
-        loginHistory: user.loginHistory,
+        loginHistory: user.loginHistory.slice(-10),
       };
+      console.log("Session after login:", req.session);
 
       // res.json(user);
       res.redirect("/posts");
